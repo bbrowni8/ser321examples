@@ -44,13 +44,22 @@ public class Fraction {
          Fraction frac = new Fraction();
 
          if (args.length == 2) {
+            int numerator = 0;
+            int denominator = 0;
             try {
-             frac.setNumerator(Integer.parseInt(args[0]));
-             frac.setDenomenator(Integer.parseInt(args[1]));
+             numerator = Integer.parseInt(args[0]);
+             denominator = Integer.parseInt(args[1]);
            } catch (Exception e) {
              System.out.println("Arguments: " + args[0] + ", " + args[1] + " must be integers.");
              System.exit(1);
            }
+            if (denominator == 0) {
+               System.out.println("The denominator cannot be zero.");
+               System.exit(1);
+            }
+            frac.setDenominator(denominator);
+            frac.setNumerator(numerator);
+         
             System.out.print("The fraction is: ");
             frac.print();
             System.out.println("");
