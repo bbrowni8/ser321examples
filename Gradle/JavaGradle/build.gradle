@@ -32,13 +32,17 @@ task runAppAgain(type: JavaExec) {
 
   main = 'Multiply'
 
-  // only works if two arguments are provided
-  // Try: using default values in case non or only one parameter is provided
-  if (project.hasProperty("num1") && project.hasProperty("num2")) {
-    args(project.getProperty('num1'), project.getProperty('num2'));
-  } else if (project.hasProperty("num1")){
-    args(project.getProperty('num1'), 1);
+  def num1 = '1'
+  def num2 = '2'
+  
+  if (project.hasProperty("num1") {
+    num1 = project.getProperty('num1')
   }
+  if (project.hasProperty("num2") {
+    num2 = project.getProperty('num2')
+  }
+
+  args(num1, num2)
 }
 
 // task that runs the Fraction Main which does not use arguments: gradle runFraction
@@ -49,6 +53,27 @@ task runFraction(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 
   main = 'Fraction'
+}
+
+task runFrac(type: JavaExec) {
+  group 'Fraction Tasks'
+  description 'Tasks which runs Fraction with default parameters or given values'
+
+  classpath = sourceSets.main.runtimeClasspath
+
+  main = 'Fraction'
+
+  def denom = '1'
+  def num = '2'
+  
+  if (project.hasProperty("denom") {
+    denom = project.getProperty('denom')
+  }
+  if (project.hasProperty("num") {
+    num = project.getProperty('num')
+  }
+
+  args(denom, num)
 }
 
 // Try:
