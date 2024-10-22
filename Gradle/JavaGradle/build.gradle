@@ -35,7 +35,7 @@ task runAppAgain(type: JavaExec) {
   if (project.hasProperty("num1") && project.hasProperty("num2")) {
     args(project.getProperty('num1'), project.getProperty('num2'));
   } else if (project.hasProperty("num1")){
-    args(project.getProperty('num1'), 2);
+    args(project.getProperty('num1'), 1);
   } else {
     args(1,2);
   }
@@ -59,17 +59,13 @@ task runFrac(type: JavaExec) {
 
   main = 'Fraction'
 
-  def denom = '1'
-  def num = '2'
-  
-  if (project.hasProperty("denom") {
-    denom = project.getProperty('denom')
+  if (project.hasProperty("denom") && project.hasProperty("num")) {
+    args(project.getProperty('denom'), project.getProperty('num'));
+  } else if (project.hasProperty("denom")){
+    args(project.getProperty('denom'), 1);
+  } else {
+    args(1,2);
   }
-  if (project.hasProperty("num") {
-    num = project.getProperty('num')
-  }
-
-  args(denom, num)
 }
 
 // Try:
