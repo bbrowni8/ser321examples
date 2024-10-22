@@ -32,17 +32,13 @@ task runAppAgain(type: JavaExec) {
 
   main = 'Multiply'
 
-  def num1 = '1'
-  def num2 = '2'
-  
-  if (project.hasProperty("num1") {
-    num1 = project.getProperty('num1')
+  if (project.hasProperty("num1") && project.hasProperty("num2")) {
+    args(project.getProperty('num1'), project.getProperty('num2'));
+  } else if (project.hasProperty("num1")){
+    args(project.getProperty('num1'), 2);
+  } else {
+    args(1,2);
   }
-  if (project.hasProperty("num2") {
-    num2 = project.getProperty('num2')
-  }
-
-  args(num1, num2)
 }
 
 // task that runs the Fraction Main which does not use arguments: gradle runFraction
