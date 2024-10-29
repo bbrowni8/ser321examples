@@ -61,7 +61,6 @@ class WebServer {
         try {
           server.close();
         } catch (IOException e) {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
@@ -198,25 +197,40 @@ class WebServer {
           // wrong data is given this just crashes
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          // extract path parameters
-          query_pairs = splitQuery(request.replace("multiply?", ""));
 
-          // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
-
-          // do math
-          Integer result = num1 * num2;
-
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
-
-          // TODO: Include error handling here with a correct error code and
-          // a response that makes sense
-
+          try {
+        	  // extract path parameters
+              query_pairs = splitQuery(request.replace("multiply?", ""));
+              
+	          // extract required fields from parameters
+	          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
+	          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+	
+	          // do math
+	          Integer result = num1 * num2;
+	
+	          // Generate response
+	          builder.append("HTTP/1.1 200 OK\n");
+	          builder.append("Content-Type: text/html; charset=utf-8\n");
+	          builder.append("\n");
+	          builder.append("Result is: " + result);
+	
+          } catch (StringIndexOutOfBoundsException be) {
+        	  builder.append("HTTP/1.1 400 Bad Request\n");
+	          builder.append("Content-Type: text/plain\n");
+	          builder.append("\n");
+	          builder.append("ERROR: Invalid input. Maybe use the format 'multiply?num1=<num1>&num2=<num2>'?");
+          } catch (NumberFormatException nfe) {
+        	  builder.append("HTTP/1.1 400 Bad Request\n");
+	          builder.append("Content-Type: text/plain\n");
+	          builder.append("\n");
+	          builder.append("ERROR: Invalid input. Please provide two valid integers.");
+          } catch (Exception e) {
+        	  builder.append("HTTP/1.1 500 Internal Server Error\n");
+	          builder.append("Content-Type: text/plain\n");
+	          builder.append("\n");
+	          builder.append("ERROR: An unexpected error occured." + e.getMessage());
+          }
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
           // check out https://docs.github.com/rest/reference/
@@ -227,17 +241,144 @@ class WebServer {
           //     "/repos/OWNERNAME/REPONAME/contributors"
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
+          try {
+        	  query_pairs = splitQuery(request.replace("github?", ""));
+        	  String query = query_pairs.get("query");
+        	  
+        	  if (query == null || query.isEmpty()) {
+            	  builder.append("HTTP/1.1 400 Bad Request\n");
+                  builder.append("Content-Type: text/plain\n");
+                  builder.append("\n");
+                  builder.append("ERROR: Missing 'query' parameter in the GitHub request.");
+              } else {
+            	  try {
+            		  String json = fetchURL("https://api.github.com/" + query);
+            		  
+            		  builder.append("HTTP/1.1 200 OK\n");
+                      builder.append("Content-Type: text/html; charset=utf-8\n");
+                      builder.append("\n");
+                      
+                      String[] repos = json.substring(1, json.length() - 1).split("\\},\\{");
+                      for (String repo : repos) {
+                          String name = extractData(repo, "full_name");
+                          String id = extractData(repo, "id");
+                          String login = extractData(repo, "\"owner\":\\{\"login\":\"", "\"");
 
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response based on what the assignment document asks for
-
+                          builder.append("Full Name: " + name);
+                          builder.append("ID: " + id);
+                          builder.append("Login: " + login);
+                      }
+            	  } catch (Exception e) {
+            		  builder.append("HTTP/1.1 500 Internal Server Error\n");
+                      builder.append("Content-Type: text/plain\n");
+                      builder.append("\n");
+                      builder.append("ERROR: Unable to get data from the GitHub API." + e.getMessage());
+            	  }
+              }
+          } catch (StringIndexOutOfBoundsException be) {
+        	  builder.append("HTTP/1.1 400 Bad Request\n");
+	          builder.append("Content-Type: text/plain\n");
+	          builder.append("\n");
+	          builder.append("ERROR: Invalid input. Maybe use the format 'github?query=users/<user>/repos'?");
+          }
+        } else if (request.contains("color?")){ 
+        	
+        	Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+        	try {
+          	  // extract path parameters
+              query_pairs = splitQuery(request.replace("color?", ""));
+                
+  	          // extract required fields from parameters
+  	          String str1 = query_pairs.get("str1");
+  	          String str2 = query_pairs.get("str2");
+  	          System.out.println(str1.length());
+  	          
+  	          if (str1.length() != 6 || str2.length() != 6) {
+  	        	  builder.append("HTTP/1.1 400 Bad Request\n");
+    	          builder.append("Content-Type: text/plain\n");
+    	          builder.append("\n");
+    	          builder.append("Please provide 6-digit strings.");
+  	          } else {
+	  	          // isolate rgb components
+	  	          int r1 = Integer.parseInt(str1.substring(0,2), 16);
+	  	          int g1 = Integer.parseInt(str1.substring(2, 4), 16);
+	  	          int b1 = Integer.parseInt(str1.substring(4, 6), 16);
+	  	          
+	  	          int r2 = Integer.parseInt(str2.substring(0, 2), 16);
+	  	          int g2 = Integer.parseInt(str2.substring(2, 4), 16);
+	  	          int b2 = Integer.parseInt(str2.substring(4, 6), 16);
+	  	          
+	  	          // calculate avg values
+	  	          int rAvg = (r1 + r2) / 2;
+	  	          int gAvg = (g1 + g2) / 2;
+	  	          int bAvg = (b1 + b2) / 2;
+	  	          
+	  	          String result = String.format("#%02X%02X%02X", rAvg, gAvg, bAvg);
+	  	
+	  	          // Generate response
+	  	          builder.append("HTTP/1.1 200 OK\n");
+	  	          builder.append("Content-Type: text/html; charset=utf-8\n");
+	  	          builder.append("\n");
+	  	          builder.append("Result is: " + result);
+  	          }
+            } catch (NumberFormatException nfe) {
+          	  builder.append("HTTP/1.1 400 Bad Request\n");
+  	          builder.append("Content-Type: text/plain\n");
+  	          builder.append("\n");
+  	          builder.append("Please provide valid hex strings.");
+            } catch (StringIndexOutOfBoundsException be) {
+          	  builder.append("HTTP/1.1 400 Bad Request\n");
+  	          builder.append("Content-Type: text/plain\n");
+  	          builder.append("\n");
+  	          builder.append("ERROR: Invalid input. Maybe use the format 'color?str1=<str1>&str2=<str2>'?");
+            } catch (Exception e) {
+          	  builder.append("HTTP/1.1 500 Internal Server Error\n");
+  	          builder.append("Content-Type: text/plain\n");
+  	          builder.append("\n");
+  	          builder.append("ERROR: An unexpected error occured." + e.getMessage());
+            }
+        } else if (request.contains("anagram?")) {
+        	Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+        	try {
+        		// extract path parameters
+                query_pairs = splitQuery(request.replace("anagram?", ""));
+                
+    	        // extract required fields from parameters
+    	        String str1 = query_pairs.get("str1").replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+    	        String str2 = query_pairs.get("str2").replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+    	        
+    	        char[] arr1 = str1.toCharArray();
+    	        char[] arr2 = str2.toCharArray();
+    	        
+    	        Arrays.sort(arr1); Arrays.sort(arr2);
+    	        
+    	        if (Arrays.equals(arr1, arr2)) {
+    	        	builder.append("HTTP/1.1 200 OK\n");
+    	        	builder.append("Content-Type: text/html; charset=utf-8\n");
+    	        	builder.append("\n");
+    	        	builder.append("The strings are anagrams.");
+    	        } else {
+    	        	builder.append("HTTP/1.1 200 OK\n");
+    	        	builder.append("Content-Type: text/html; charset=utf-8\n");
+    	        	builder.append("\n");
+    	        	builder.append("The strings are NOT anagrams.");
+    	        }
+        	} catch (NullPointerException npe) {
+        		builder.append("HTTP/1.1 400 Bad Request\n");
+        		builder.append("Content-Type: text/plain\n");
+        		builder.append("\n");
+        		builder.append("ERROR: Please ensure that you have provided two valid strings.");
+        	} catch (StringIndexOutOfBoundsException be) {
+            	  builder.append("HTTP/1.1 400 Bad Request\n");
+      	          builder.append("Content-Type: text/plain\n");
+      	          builder.append("\n");
+      	          builder.append("ERROR: Invalid input. Maybe use the format 'anagram?str1=<str1>&str2=<str2>'?");
+            }catch (Exception e) {
+            	builder.append("HTTP/1.1 500 Internal Server Error\n");
+            	builder.append("Content-Type: text/plain\n");
+            	builder.append("\n");
+            	builder.append("ERROR: An unexpected error occured." + e.getMessage());
+            }
         } else {
           // if the request is not recognized at all
 
@@ -246,7 +387,7 @@ class WebServer {
           builder.append("\n");
           builder.append("I am not sure what you want me to do...");
         }
-
+        
         // Output
         response = builder.toString().getBytes();
       }
@@ -324,7 +465,26 @@ class WebServer {
 
     return result;
   }
-
+/**
+ * Helper methods for extracting JSON data.
+ */
+  private static String extractData(String json, String key) {
+      String search = "\"" + key + "\":";
+      int start = json.indexOf(search) + search.length();
+      int end = json.indexOf(",", start);
+      
+      if (end == -1) { 
+    	  end = json.indexOf("}", start);
+      }
+      
+      return json.substring(start, end).replace("\"", "").trim();
+  }
+  private static String extractData(String json, String startKey, String endKey) {
+      int start = json.indexOf(startKey) + startKey.length();
+      int end = json.indexOf(endKey, start);
+      
+      return json.substring(start, end).trim();
+  }
   /**
    *
    * a method to make a web request. Note that this method will block execution
