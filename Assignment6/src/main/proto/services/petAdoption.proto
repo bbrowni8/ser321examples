@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "service";
+option java_outer_classname = "PetAdoptionProto";
+
+package services;
+import "google/protobuf/empty.proto";
+
+service PetAdoption {
+  rpc addPet(AddPetReq) returns (AddPetRes);
+  rpc ListPets(google.protobuf.Empty) returns (PetListRes);
+  rpc RequestAdoption(AdoptionReq) returns (AdoptionRes);
+  rpc SearchPets(PetSearchReq) returns (PetSearchRes);
+}
+
+// Request
+message AddPetReq {
+  string name = 1; 
+  PetType type = 2;
+  int32 age = 3;
+  string description = 4;
+}
+
+// Response
+message AddPetRes {
+  bool isSuccess = 1;
+  string message = 2; // success or failure message
+}
+
+// Response 
+message PetListRes {
+  repeated Pet pets = 1; // List of available pets
+  bool isSuccess = 2;
+  string message = 3;  // message is blank if isSuccess is true; otherwise, send error message
+}
+
+// Request
+message AdoptionReq { 
+  int32 petId = 1; 
+}
+
+// Response
+message AdoptionRes {
+  bool isSuccess = 1; 
+  string message = 2; // if isSuccess is true, send confirmation; otherwise, send error/failure response
+}
+
+// Request
+message PetSearchReq {
+  string type = 1; // type of pet requested
+  int32 maxAge = 2; // pet's maximum age
+}
+
+// Response
+message PetSearchRes {
+  repeated Pet pets = 1; // list of pets
+  bool isSuccess = 2;
+  string message = 3; // if isSuccess is true, message is blank; otherwise, error/failure response
+}
+
+enum PetType {
+  UNKNOWN = 0;
+  DOG = 1;
+  CAT = 2;
+  BIRD = 3;
+  RABBIT = 4;
+  DRAGON = 5;
+}
+
+// Entity: Pet
+message Pet {
+  int32 id = 1;
+  string name = 2; 
+  PetType type = 3; 
+  int32 age = 4; // Age in years 
+  string description = 5; 
+  bool isAdopted = 6; 
+}
